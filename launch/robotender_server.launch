@@ -1,0 +1,6 @@
+<!-- Starts up everything needed to run the example listener/talker Python nodes. -->
+<launch>
+
+  <!-- The listener node subscribes to the custom message that talker is publishing. -->
+  <node pkg="robotender_server" type="robotender_server_node.py" name="robotender_server_node"/>
+</launch>
