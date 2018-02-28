@@ -1,2 +1,2 @@
-string item
-int32 qty
+string beverage
+uint8 qty
