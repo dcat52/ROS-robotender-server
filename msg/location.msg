@@ -1,0 +1,2 @@
+string item
+string loc

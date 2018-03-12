@@ -14,6 +14,8 @@ add_message_files(
   FILES
   item.msg
   order.msg
+  order_temp.msg
+  location.msg
 )
 
 generate_messages(

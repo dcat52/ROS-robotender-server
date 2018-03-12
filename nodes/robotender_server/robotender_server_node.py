@@ -8,7 +8,9 @@ import rospy
 import Queue
 
 # Import custom message data.
-from robotender_server.msg import order
+from robotender_server.msg import order_temp
+from robotender_server.msg import location
+
 
 class robotender_server_node():
 
@@ -16,35 +18,55 @@ class robotender_server_node():
         rospy.loginfo("Server node started.")
 
         self._q = Queue.Queue()
+        
+        # temp dictionary with default qty & locations
+        qty = { "Coke" : 1, "Corona" : 0 }
+        locations = {"Coke" : "L0", "Corona" : "L1" }
 
-        self.listener()
-        self.pub = rospy.Publisher('robotender/order/request/response', order, latch=True, queue_size=1)
+        rospy.Subscriber('robotender/order/new_order', order_temp, self.new_order)
+        rospy.Subscriber('robotender/order/request', order_temp, self.get_order)
+
+        self.pub = rospy.Publisher('robotender/order/request/response', location, latch=True, queue_size=1)
+        
         rospy.spin()
 
-    def listener(self):
-        """Configure subscriber."""
-        # Create a subscriber with appropriate topic, custom message and name of
-        # callback function.
-        rospy.Subscriber('robotender/order/new_order', order, self.new_order)
-        rospy.Subscriber('robotender/order/request', order, self.get_order)
 
     def new_order(self, data):
             """Handle subscriber data."""
-            # Simply print out values in our custom message.
-            rospy.loginfo(rospy.get_name() + " I got order %s", data.items[0].item)
-            self._q.put(data.items[0].item)
+            rospy.loginfo(rospy.get_name() + " I got order %s", data.item)
+
+            if qty[data.item] > 0:
+                rospy.loginfo(rospy.get_name() + " Item added to queue.")
+
+                qty[data.item] = qty[data.item] - 1
+                self._q.put(data.item)
+
+            else:
+                rospy.loginfo(rospy.get_name() + " Qty of requested item is invalid.")
+
 
     def get_order(self, data):
             """Handle subscriber data."""
-            # Simply print out values in our custom message.
             rospy.loginfo(rospy.get_name() + " I got a next order request.")
+
             if not self._q.empty():
-                order = self._q.get().items[0].item
-                rospy.loginfo(order)
-                print order
-                self.pub.publish(order)
+                item = self._q.get()
+                loc = locations[item]
+                rospy.loginfo(rospy.get_name() + "I provided the following order: %s at location: %s.", item, loc)
+                
+                location.item = item
+                location.loc = loc
+
+                self.pub.publish(location)
+
             else:
                 rospy.loginfo("no orders in queue.")
+
+                location.item = None
+                location.loc = None
+
+                self.pub.publish(location)
+
 
 # Main function.
 if __name__ == '__main__':
