@@ -9,6 +9,7 @@ import Queue
 
 # Import custom message data.
 from robotender_server.msg import order_temp
+from robotender_server.msg import item
 from robotender_server.msg import location
 
 
@@ -33,13 +34,14 @@ class robotender_server_node():
 
     def new_order(self, data):
             """Handle subscriber data."""
-            rospy.loginfo(rospy.get_name() + " I got order %s", data.item)
+            rospy.loginfo(rospy.get_name() + " I got order %s", data.ia.beverage)
 
-            if qty[data.item] > 0:
+            if qty[data.ia.beverage] > 0:
                 rospy.loginfo(rospy.get_name() + " Item added to queue.")
 
-                qty[data.item] = qty[data.item] - 1
-                self._q.put(data.item)
+                # TODO: currently a lot of data is eliminated. To be corrected
+                qty[data.ia.beverage] = qty[data.ia.beverage] - 1
+                self._q.put(data.ia.beverage)
 
             else:
                 rospy.loginfo(rospy.get_name() + " Qty of requested item is invalid.")
