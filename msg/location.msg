@@ -1,2 +1,2 @@
 string item
-string loc
+float[] loc

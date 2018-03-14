@@ -21,8 +21,12 @@ class robotender_server_node():
         self._q = Queue.Queue()
         
         # temp dictionary with default qty & locations
-        qty = { "Coke" : 1, "Corona" : 0 }
-        locations = {"Coke" : "L0", "Corona" : "L1" }
+        L = [
+            [], # COKE Location
+            [], # MTN DEW Location
+            ]
+        qty = { "Coke" : 1, "Mountain Dew" : 0 }
+        locations = {"Coke" : L[0], "Mountain Dew" : L[1] }
 
         rospy.Subscriber('robotender/order/new_order', order_temp, self.new_order)
         rospy.Subscriber('robotender/order/request', order_temp, self.get_order)
