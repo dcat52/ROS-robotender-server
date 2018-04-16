@@ -1,2 +1,3 @@
 string item
-float[] loc
+float32[] loc
+string cmd

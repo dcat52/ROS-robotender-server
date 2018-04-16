@@ -11,6 +11,7 @@ import Queue
 from robotender_server.msg import order_temp
 from robotender_server.msg import item
 from robotender_server.msg import location
+from std_msgs.msg import Empty
 
 
 class robotender_server_node():
@@ -22,17 +23,22 @@ class robotender_server_node():
         
         # temp dictionary with default qty & locations
         L = [
-            [], # COKE Location
-            [], # MTN DEW Location
+            [4.689989132456033, 4.986320664845804, 2.335705726661929, 1.0374792103257078, 1.8654296945155784, 3.0460133999635035], # COKE Location
+            [4.602698168774288, 4.799941999117698, 1.3441729027798952, 0.8534932616789841, 1.8680278744750596, 2.255676670640612, 0.0012319970456220702], # MTN DEW Location
             ]
-        qty = { "Coke" : 1, "Mountain Dew" : 0 }
-        locations = {"Coke" : L[0], "Mountain Dew" : L[1] }
+        self.qty = { "Coke" : 2, "Mountain Dew" : 1 }
+        self.locations = {"Coke" : L[0], "Mountain Dew" : L[1] }
 
         rospy.Subscriber('robotender/order/new_order', order_temp, self.new_order)
-        rospy.Subscriber('robotender/order/request', order_temp, self.get_order)
+        rospy.Subscriber('robotender/order/request', Empty, self.get_order)
 
         self.pub = rospy.Publisher('robotender/order/request/response', location, latch=True, queue_size=1)
-        
+        l = location()
+        l.item = ""
+        l.loc = []
+        l.cmd = "no"
+        self.pub.publish(l)
+
         rospy.spin()
 
 
@@ -40,11 +46,11 @@ class robotender_server_node():
             """Handle subscriber data."""
             rospy.loginfo(rospy.get_name() + " I got order %s", data.ia.beverage)
 
-            if qty[data.ia.beverage] > 0:
+            if self.qty[data.ia.beverage] > 0:
                 rospy.loginfo(rospy.get_name() + " Item added to queue.")
 
                 # TODO: currently a lot of data is eliminated. To be corrected
-                qty[data.ia.beverage] = qty[data.ia.beverage] - 1
+                self.qty[data.ia.beverage] = self.qty[data.ia.beverage] - 1
                 self._q.put(data.ia.beverage)
 
             else:
@@ -57,21 +63,24 @@ class robotender_server_node():
 
             if not self._q.empty():
                 item = self._q.get()
-                loc = locations[item]
+                loc = self.locations[item]
                 rospy.loginfo(rospy.get_name() + "I provided the following order: %s at location: %s.", item, loc)
                 
-                location.item = item
-                location.loc = loc
+                l = location()
+                l.item = item
+                l.loc = loc
+                l.cmd = "yes"
 
-                self.pub.publish(location)
+                self.pub.publish(l)
 
             else:
                 rospy.loginfo("no orders in queue.")
+                l = location()
+                l.item = " "
+                l.loc = [0.0]
+                l.cmd = "no"
 
-                location.item = None
-                location.loc = None
-
-                self.pub.publish(location)
+                self.pub.publish(l)
 
 
 # Main function.
