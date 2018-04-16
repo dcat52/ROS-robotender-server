@@ -22,12 +22,42 @@ class robotender_server_node():
         self._q = Queue.Queue()
         
         # temp dictionary with default qty & locations
-        L = [
-            [4.689989132456033, 4.986320664845804, 2.335705726661929, 1.0374792103257078, 1.8654296945155784, 3.0460133999635035], # COKE Location
-            [4.602698168774288, 4.799941999117698, 1.3441729027798952, 0.8534932616789841, 1.8680278744750596, 2.255676670640612, 0.0012319970456220702], # MTN DEW Location
+        self.locations =
+            [
+                [[],
+                 [],
+                 []], # L1
+
+                [[],
+                 [],
+                 []], # L2
+
+                [[],
+                 [],
+                 []], # L3
+
+                [[],
+                 [],
+                 []], # L4
+
+                [[],
+                 [],
+                 []] # L5
             ]
-        self.qty = { "Coke" : 2, "Mountain Dew" : 1 }
-        self.locations = {"Coke" : L[0], "Mountain Dew" : L[1] }
+
+        bevs = ["Ginger", "Cheer Wine", "Mountain Dew", "Root beer", "Temp"]
+
+        self.qty = {}
+
+        for b in range(bevs):
+            self.qty[b] = 9E99
+
+        #self.qty = { bevs[0] : 2, bevs[0] : 1 }
+
+        for i in range(bevs):
+            self.locations[bevs[i]] = L[i]
+
+        #self.locations = {"Coke" : L[0], "Mountain Dew" : L[1] }
 
         rospy.Subscriber('robotender/order/new_order', order_temp, self.new_order)
         rospy.Subscriber('robotender/order/request', Empty, self.get_order)
@@ -35,7 +65,9 @@ class robotender_server_node():
         self.pub = rospy.Publisher('robotender/order/request/response', location, latch=True, queue_size=1)
         l = location()
         l.item = ""
-        l.loc = []
+        l.locA = []
+        l.locB = []
+        l.locC = []
         l.cmd = "no"
         self.pub.publish(l)
 
@@ -63,12 +95,13 @@ class robotender_server_node():
 
             if not self._q.empty():
                 item = self._q.get()
-                loc = self.locations[item]
-                rospy.loginfo(rospy.get_name() + "I provided the following order: %s at location: %s.", item, loc)
+                rospy.loginfo(rospy.get_name() + "I provided the following order: %s.", item)
                 
                 l = location()
                 l.item = item
-                l.loc = loc
+                l.locA = self.locations[item][0]
+                l.locB = self.locations[item][1]
+                l.locC = self.locations[item][2]
                 l.cmd = "yes"
 
                 self.pub.publish(l)
@@ -77,7 +110,9 @@ class robotender_server_node():
                 rospy.loginfo("no orders in queue.")
                 l = location()
                 l.item = " "
-                l.loc = [0.0]
+                l.locA = [0.0]
+                l.locB = [0.0]
+                l.locC = [0.0]
                 l.cmd = "no"
 
                 self.pub.publish(l)
